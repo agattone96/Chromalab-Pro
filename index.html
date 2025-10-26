@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chromalab Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --color-base: #0F1116;
+        --color-surface: #1A1D23;
+        --color-border: #2D31A;
+        
+        /* Accent Color Hierarchy */
+        --color-accent-pink: #FF3EB5; /* Interactive elements */
+        --color-accent-coral: #F4A261; /* Feature badges */
+        --color-accent-violet: #B66FB3; /* Data/status highlights */
+
+        --color-text-primary: #EAEBF0;
+        --color-text-secondary: #9B9FA8;
+        --font-heading: 'Inter', sans-serif;
+        --font-data: 'Roboto Mono', monospace;
+      }
+
+      .theme-light {
+        --color-base: #F0F2F5;
+        --color-surface: #FFFFFF;
+        --color-border: #D9DEE3;
+        --color-text-primary: #1A1D23;
+        --color-text-secondary: #5F6773;
+      }
+
+      body {
+        font-family: var(--font-heading);
+        background-color: var(--color-base);
+        color: var(--color-text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      .font-data {
+        font-family: var(--font-data);
+      }
+      @keyframes pulse-glow {
+        0%, 100% {
+          box-shadow: 0 0 0 0 rgba(244, 162, 97, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 10px 5px rgba(244, 162, 97, 0);
+        }
+      }
+      .animate-pulse {
+        animation: pulse-glow 2.5s infinite;
+      }
+
+      @keyframes subtle-pulse {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+      .animate-subtle-pulse {
+        background-size: 200% 200%;
+        animation: subtle-pulse 15s ease infinite;
+      }
+
+      @keyframes fade-in-slide-up {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in-slide-up {
+        animation: fade-in-slide-up 0.6s ease-out forwards;
+        opacity: 0; /* Start hidden */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+    "react": "https://esm.sh/react@18.3.1",
+    "@google/genai": "https://esm.sh/@google/genai@0.14.0",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.4.0/",
+    "@firebase/app": "https://aistudiocdn.com/@firebase/app@^0.14.4",
+    "@firebase/firestore": "https://aistudiocdn.com/@firebase/firestore@^4.9.2",
+    "@firebase/auth": "https://aistudiocdn.com/@firebase/auth@^1.11.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

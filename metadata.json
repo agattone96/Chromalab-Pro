@@ -1,0 +1,7 @@
+{
+  "name": "Chromalab Pro",
+  "description": "A salon-grade tool for licensed hairstylists to convert a client photo into an exact, brand-specific color plan with realistic previews and a procedural workflow.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
