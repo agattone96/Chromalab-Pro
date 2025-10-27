@@ -10,7 +10,7 @@ import ProfileTab from './components/auth/ProfileTab';
 import Tooltip from './components/common/Tooltip';
 import GlobalSpinner from './components/common/GlobalSpinner';
 import TourGuide from './components/common/TourGuide';
-import AssistantPanel from './components/assistant/AssistantPanel';
+import AssistantModal from './components/assistant/AssistantModal';
 import { useAuth } from './contexts/AuthContext';
 import type { HairAnalysis, ColorPlan, Tab, ClientPhoto, AppUser } from './types';
 
@@ -26,13 +26,6 @@ const App: React.FC = () => {
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-
-  // Auto-open assistant when a new color plan is created
-  useEffect(() => {
-    if (colorPlan && currentUser?.isVerified) {
-      setIsAssistantOpen(true);
-    }
-  }, [colorPlan, currentUser?.isVerified]);
 
   useEffect(() => {
     document.documentElement.classList.remove('theme-light', 'theme-dark');
@@ -76,11 +69,38 @@ const App: React.FC = () => {
     setTourStep(prev => (prev !== null ? prev + 1 : null));
   };
 
+  const handleTourPrevious = () => {
+    setTourStep(prev => (prev !== null && prev > 0 ? prev - 1 : null));
+  };
+
   const endTour = () => {
     setTourStep(null);
   };
 
+  const openAssistant = useCallback(() => {
+    if (colorPlan && currentUser?.isVerified) {
+      setIsAssistantOpen(true);
+    }
+  }, [colorPlan, currentUser]);
 
+  const AssistantBubble = () => {
+    const isEnabled = colorPlan && currentUser?.isVerified;
+    const tooltipText = isEnabled ? "Ask AI Assistant for guidance on this plan" : "Generate a color plan and verify your license to activate the AI Assistant.";
+    
+    return (
+      <div id="assistant-bubble" className="fixed bottom-6 right-6 z-50">
+        <Tooltip text={tooltipText}>
+          <button 
+            onClick={openAssistant}
+            disabled={!isEnabled}
+            className={`w-16 h-16 bg-gradient-to-br from-[--color-accent-violet] to-[--color-accent-pink] rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${isEnabled ? 'hover:scale-110 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}`}
+          >
+            <span className={`text-3xl ${isEnabled && 'animate-pulse'}`}>🤖</span>
+          </button>
+        </Tooltip>
+      </div>
+    );
+  };
 
   const renderContent = () => {
     // This check is important for RBAC
@@ -143,9 +163,18 @@ const App: React.FC = () => {
         <TourGuide
           step={tourStep}
           onNext={handleTourNext}
+          onPrev={handleTourPrevious}
           onEnd={endTour}
           setActiveTab={setActiveTab}
         />
+      )}
+      {colorPlan && isAssistantOpen && (
+          <AssistantModal
+            isOpen={isAssistantOpen}
+            onClose={() => setIsAssistantOpen(false)}
+            colorPlan={colorPlan}
+            hairAnalysis={hairAnalysis}
+          />
       )}
       <Header theme={theme} toggleTheme={toggleTheme} />
       <main className="container mx-auto p-4 md:p-8">
@@ -170,12 +199,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
-      <AssistantPanel
-        isOpen={isAssistantOpen}
-        onClose={() => setIsAssistantOpen(false)}
-        colorPlan={colorPlan}
-        hairAnalysis={hairAnalysis}
-      />
+      <AssistantBubble />
     </div>
   );
 };

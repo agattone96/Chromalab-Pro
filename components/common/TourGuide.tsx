@@ -12,6 +12,7 @@ interface TourStep {
 interface TourGuideProps {
   step: number;
   onNext: () => void;
+  onPrev: () => void;
   onEnd: () => void;
   setActiveTab: (tab: Tab) => void;
 }
@@ -68,7 +69,7 @@ const tourSteps: TourStep[] = [
   }
 ];
 
-const TourGuide: React.FC<TourGuideProps> = ({ step, onNext, onEnd, setActiveTab }) => {
+const TourGuide: React.FC<TourGuideProps> = ({ step, onNext, onPrev, onEnd, setActiveTab }) => {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
   
@@ -185,11 +186,21 @@ const TourGuide: React.FC<TourGuideProps> = ({ step, onNext, onEnd, setActiveTab
         <p className="text-[--color-text-secondary] text-sm mb-4">{currentStep.content}</p>
         <div className="flex items-center justify-between">
           <button onClick={onEnd} className="text-xs text-[--color-text-secondary] hover:text-[--color-text-primary] transition-colors">Skip Tour</button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {step > 0 && (
+              <button
+                onClick={onPrev}
+                className="text-sm font-semibold text-[--color-text-secondary] hover:text-[--color-text-primary] transition-colors"
+                aria-label="Previous step"
+              >
+                Previous
+              </button>
+            )}
             <span className="text-xs font-data text-[--color-text-secondary]">{step + 1} / {tourSteps.length}</span>
             <button
               onClick={isFinalStep ? onEnd : onNext}
               className="bg-gradient-to-r from-[--color-accent-violet] to-[--color-accent-pink] hover:opacity-90 text-white font-bold py-1.5 px-4 rounded-lg text-sm transition-opacity duration-300"
+              aria-label={isFinalStep ? 'Finish tour' : 'Next step'}
             >
               {isFinalStep ? 'Finish' : 'Next'}
             </button>
