@@ -1,55 +1,92 @@
-import { GoogleGenAI } from "@google/genai";
-import type { HairAnalysis, ColorPlan, ChatMessage } from '../types';
+import type { ColorPlan, HairAnalysis, ChatMessage } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set. Please set it in the environment.");
+// Since the backend is not yet built, we'll define placeholder types 
+// for the expected API responses.
+
+export interface FormulaAnalysis {
+  advice: string;
+  why: string;
+  source?: string;
+  confidence: number;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-const model = 'gemini-2.5-pro';
+export interface ChatResponse {
+  advice: string;
+  why?: string;
+  source?: string;
+}
 
-export const getAssistantResponse = async (
-  history: ChatMessage[],
-  colorPlan: ColorPlan,
-  hairAnalysis: HairAnalysis | null
-): Promise<string> => {
+export interface EducationTopic {
+  title: string;
+  content: string;
+  source: string;
+}
 
-  const systemInstruction = `
-    You are an expert hair colorist AI assistant. Your role is to guide a licensed stylist through a pre-generated color plan.
-    Be encouraging, concise, and helpful. Focus on the practical next steps.
-    DO NOT invent new formula steps or contradict the plan. Your goal is to clarify and support the execution of the provided plan.
-    Reference the client's hair analysis if their question relates to it (e.g., "Why do I need a bond builder?").
-    Keep your answers short and focused unless the user asks for a detailed explanation.
+// Base URL for the assistant API. This would be in an env file in a real app.
+const API_BASE_URL = '/api/assistant';
 
-    **CURRENT COLOR PLAN:**
-    ${JSON.stringify(colorPlan, null, 2)}
-
-    **CLIENT HAIR ANALYSIS:**
-    ${JSON.stringify(hairAnalysis, null, 2)}
-  `;
-  
-  // Format history for the Gemini API
-   const contents = history.map(msg => ({
-    role: msg.role === 'model' ? 'model' : 'user', // Ensure correct role mapping
-    parts: [{ text: msg.text }]
-  }));
-
-
+/**
+ * A helper function to handle fetch requests and errors.
+ * @param url - The URL to fetch.
+ * @param options - The options for the fetch request.
+ * @returns The JSON response.
+ * @throws An error if the fetch request fails.
+ */
+async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   try {
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: contents,
-      config: {
-        systemInstruction: systemInstruction,
-        // Use a lower temperature for more predictable, instruction-focused responses
-        temperature: 0.3,
-        topP: 0.9,
-      }
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
     });
 
-    return response.text.trim();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+      throw new Error(errorData.message || `Request failed with status ${response.status}`);
+    }
+
+    return response.json();
   } catch (error) {
-    console.error("Error getting assistant response:", error);
-    throw new Error("The AI assistant is currently unavailable. Please try again later.");
+    console.error(`API Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // In a real app, you might want to use a more sophisticated logger
+    // and handle different error types.
+    throw error;
   }
+}
+
+/**
+ * Sends a formula and hair analysis to the backend for evaluation.
+ * @param formulaData - The color plan and hair analysis data.
+ * @returns A promise that resolves to a formula analysis.
+ */
+export const analyzeFormula = (formulaData: { colorPlan: ColorPlan; hairAnalysis: HairAnalysis }): Promise<FormulaAnalysis> => {
+  return apiFetch<FormulaAnalysis>(`${API_BASE_URL}/analyze-formula`, {
+    method: 'POST',
+    body: JSON.stringify(formulaData),
+  });
+};
+
+/**
+ * Sends a user's message to the chat endpoint.
+ * @param chatData - The conversation history.
+ * @returns A promise that resolves to the assistant's response.
+ */
+export const askAssistant = (chatData: { messages: ChatMessage[] }): Promise<ChatResponse> => {
+  return apiFetch<ChatResponse>(`${API_BASE_URL}/chat`, {
+    method: 'POST',
+    body: JSON.stringify(chatData),
+  });
+};
+
+/**
+ * Fetches an educational topic from the backend.
+ * @param topic - The topic to retrieve.
+ * @returns A promise that resolves to the educational content.
+ */
+export const getEducationTopic = (topic: string): Promise<EducationTopic> => {
+  return apiFetch<EducationTopic>(`${API_BASE_URL}/education/${encodeURIComponent(topic)}`, {
+    method: 'GET',
+  });
 };
