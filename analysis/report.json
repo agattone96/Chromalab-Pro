@@ -1,0 +1,129 @@
+{
+  "repo_overview": {
+    "name": "Chromalab-Pro",
+    "description": "An AI-powered hair color formulation assistant for professional stylists. The current implementation is a client-side only React application using Firebase for authentication and directly calling Google AI APIs.",
+    "frameworks": ["React", "Vite", "TypeScript"],
+    "package_manager": "npm"
+  },
+  "folders": [
+    { "path": "/components", "description": "Contains all UI components, organized by feature (auth, assistant) and common elements." },
+    { "path": "/services", "description": "Handles external API calls, specifically to Firebase and Google AI (Gemini, Imagen)." },
+    { "path": "/contexts", "description": "Manages global state, primarily for authentication." },
+    { "path": "/__tests__", "description": "Contains unit tests. Currently holds only a placeholder test for the AI assistant." }
+  ],
+  "dependencies": {
+    "frontend": ["react", "react-dom", "vite"],
+    "backend_services": ["firebase", "@google/genai"]
+  },
+  "feature_matrix": [
+    {
+      "feature": "Auth",
+      "status": "implemented",
+      "description": "Full authentication flow with email/password, Google, Apple, and Magic Link sign-in. Includes user registration, email verification, and profile management.",
+      "files": [
+        "contexts/AuthContext.tsx",
+        "services/firebaseService.ts",
+        "components/auth/Login.tsx",
+        "components/auth/Register.tsx",
+        "components/auth/ProfileTab.tsx",
+        "components/auth/AuthGate.tsx"
+      ]
+    },
+    {
+      "feature": "Intake & Analyze",
+      "status": "implemented",
+      "description": "Allows users to upload a client photo for AI-powered hair analysis to determine levels, tones, porosity, etc.",
+      "files": ["components/IntakeTab.tsx", "services/geminiService.ts"]
+    },
+    {
+      "feature": "Formula Builder",
+      "status": "implemented",
+      "description": "Generates a detailed, step-by-step color plan based on the hair analysis and a user-defined target color.",
+      "files": ["components/PlanTab.tsx", "services/geminiService.ts"]
+    },
+    {
+      "feature": "Simulation Studio",
+      "status": "partial",
+      "description": "Can generate new 'inspiration' images from text and perform basic edits on the client photo. Lacks advanced simulation features.",
+      "files": ["components/ImageStudioTab.tsx", "services/geminiService.ts"]
+    },
+    {
+      "feature": "AI Assistant",
+      "status": "stub",
+      "description": "UI components for a chat-based assistant exist, but the backing service is a non-functional stub pointing to a non-existent backend.",
+      "files": ["components/assistant/AssistantModal.tsx", "components/assistant/AssistantPanel.tsx", "services/assistantService.ts"]
+    },
+    {
+      "feature": "Research & Education",
+      "status": "implemented",
+      "description": "Provides a search interface that uses Gemini with Google Search grounding for up-to-date answers.",
+      "files": ["components/ResearchTab.tsx", "services/geminiService.ts"]
+    },
+    {
+      "feature": "Client Management",
+      "status": "missing",
+      "description": "No functionality to save, load, or manage client data or formula sessions. All session data is ephemeral.",
+      "files": []
+    }
+  ],
+  "security_issues": [
+    {
+      "issue": "Exposed API Key",
+      "severity": "Critical",
+      "description": "The Google AI (Gemini) API key is exposed on the client-side via vite.config.ts. This allows anyone to steal and use the key, leading to unexpected billing and potential service abuse.",
+      "files": ["vite.config.ts", "services/geminiService.ts"]
+    },
+    {
+      "issue": "Client-Side API Calls",
+      "severity": "High",
+      "description": "All calls to the Gemini and Imagen APIs are made directly from the frontend. This is a direct result of the exposed API key and prevents any server-side validation, rate-limiting, or logging.",
+      "files": ["services/geminiService.ts"]
+    },
+    {
+      "issue": "Missing CORS/CSRF Protection",
+      "severity": "Medium",
+      "description": "As a client-side only application, there is no backend to configure CORS or CSRF protection. This will become a critical issue when a backend API is introduced.",
+      "files": []
+    }
+  ],
+  "tech_debt": [
+    {
+      "issue": "No Backend Architecture",
+      "category": "Scalability",
+      "description": "The entire application logic resides on the client, making it impossible to scale, secure, or manage state effectively. There is no database for persistence.",
+      "files": []
+    },
+    {
+      "issue": "Lack of State Persistence",
+      "category": "DX",
+      "description": "Client sessions are not saved. A page refresh results in a complete loss of work, leading to a poor user experience.",
+      "files": ["App.tsx"]
+    },
+    {
+      "issue": "Minimal Test Coverage",
+      "category": "Quality",
+      "description": "Only a single placeholder test file exists. There is no meaningful test coverage for components or services.",
+      "files": ["__tests__/assistant/assistant.test.ts"]
+    },
+    {
+      "issue": "Missing Environment Example",
+      "category": "DX",
+      "description": "There is no `.env.example` file, making it difficult for new developers to set up the project locally.",
+      "files": []
+    }
+  ],
+  "migration_risks": [
+    {
+      "risk": "Refactoring Frontend Services",
+      "description": "The `geminiService.ts` file will need to be completely refactored. All direct API calls must be replaced with fetches to the new backend API, which will require careful state management during the transition."
+    },
+    {
+      "risk": "Authentication Strategy",
+      "description": "The backend will need a strategy to authenticate requests from the frontend. This will likely involve passing the Firebase JWT from the client to the backend API for verification."
+    },
+    {
+      "risk": "Database Tenancy Model",
+      "description": "Introducing a database requires a clear data model for tenancy (e.g., how to associate clients and formulas with specific users/salons) and implementing Row-Level Security (RLS) to prevent data leakage between users."
+    }
+  ]
+}
