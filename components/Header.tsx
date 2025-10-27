@@ -6,9 +6,11 @@ import { signOutUser } from '../services/firebaseService';
 interface HeaderProps {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  onLoginClick: () => void;
+  onRegisterClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onLoginClick, onRegisterClick }) => {
   const { currentUser } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
                 </span>
               </button>
             </Tooltip>
-            {currentUser && (
+            {currentUser ? (
               <div className="relative" ref={dropdownRef}>
                 <Tooltip text="Account Settings">
                   <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-10 h-10 bg-gradient-to-br from-[--color-accent-violet] to-[--color-accent-pink] rounded-full flex items-center justify-center text-white font-bold uppercase border-2 border-[--color-surface]">
@@ -69,6 +71,15 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
                     </button>
                   </div>
                 )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button onClick={onLoginClick} className="text-sm font-semibold text-[--color-text-secondary] hover:text-[--color-text-primary] transition-colors px-4 py-2 rounded-md">
+                  Sign In
+                </button>
+                <button onClick={onRegisterClick} className="text-sm font-semibold bg-gradient-to-r from-[--color-accent-violet] to-[--color-accent-pink] text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity">
+                  Sign Up
+                </button>
               </div>
             )}
           </div>

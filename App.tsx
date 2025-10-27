@@ -11,11 +11,15 @@ import Tooltip from './components/common/Tooltip';
 import GlobalSpinner from './components/common/GlobalSpinner';
 import TourGuide from './components/common/TourGuide';
 import AssistantModal from './components/assistant/AssistantModal';
+import Modal from './components/common/Modal';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import VerifyEmailBanner from './components/auth/VerifyEmailBanner';
 import { useAuth } from './contexts/AuthContext';
 import type { HairAnalysis, ColorPlan, Tab, ClientPhoto, AppUser } from './types';
 
 const App: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, firebaseUser, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('Homepage');
   const [clientPhoto, setClientPhoto] = useState<ClientPhoto | null>(null);
   const [hairAnalysis, setHairAnalysis] = useState<HairAnalysis | null>(null);
@@ -26,6 +30,7 @@ const App: React.FC = () => {
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [authModal, setAuthModal] = useState<'login' | 'register' | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.remove('theme-light', 'theme-dark');
@@ -84,7 +89,8 @@ const App: React.FC = () => {
   }, [colorPlan, currentUser]);
 
   const AssistantBubble = () => {
-    const isEnabled = colorPlan && currentUser?.isVerified;
+    if (!currentUser) return null; // Don't show for guests
+    const isEnabled = colorPlan && currentUser.isVerified;
     const tooltipText = isEnabled ? "Ask AI Assistant for guidance on this plan" : "Generate a color plan and verify your license to activate the AI Assistant.";
     
     return (
@@ -103,10 +109,7 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    // This check is important for RBAC
-    if (!currentUser) return <Homepage setActiveTab={setActiveTab} startTour={startTour} />;
-    
-    const isVerified = currentUser.isVerified;
+    const isVerified = currentUser?.isVerified ?? false;
 
     switch (activeTab) {
       case 'Homepage':
@@ -124,7 +127,7 @@ const App: React.FC = () => {
             setIsAutoPlanned={setIsAutoPlanned}
             withGlobalLoading={withGlobalLoading}
           />
-        ) : <ProfileTab setActiveTab={setActiveTab} />;
+        ) : <ProfileTab setActiveTab={setActiveTab} setAuthModal={setAuthModal} />;
       case 'Formula Builder':
         return isVerified ? (
           <PlanTab
@@ -138,23 +141,27 @@ const App: React.FC = () => {
             setHairAnalysis={setHairAnalysis}
             withGlobalLoading={withGlobalLoading}
           />
-        ) : <ProfileTab setActiveTab={setActiveTab} />;
+        ) : <ProfileTab setActiveTab={setActiveTab} setAuthModal={setAuthModal} />;
       case 'Simulation Studio':
         return isVerified ? (
           <ImageStudioTab clientPhoto={clientPhoto} setError={setError} withGlobalLoading={withGlobalLoading} />
-        ) : <ProfileTab setActiveTab={setActiveTab} />;
+        ) : <ProfileTab setActiveTab={setActiveTab} setAuthModal={setAuthModal} />;
       case 'Research & Education':
         return isVerified ? (
           <ResearchTab setError={setError} withGlobalLoading={withGlobalLoading} />
-        ) : <ProfileTab setActiveTab={setActiveTab} />;
+        ) : <ProfileTab setActiveTab={setActiveTab} setAuthModal={setAuthModal} />;
       case 'Profile':
-        return <ProfileTab setActiveTab={setActiveTab} />;
+        return <ProfileTab setActiveTab={setActiveTab} setAuthModal={setAuthModal} />;
       default:
         return null;
     }
   };
 
   const isTourActive = tourStep !== null;
+
+  if (loading) {
+    return <GlobalSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-[--color-base] text-[--color-text-primary]">
@@ -168,6 +175,26 @@ const App: React.FC = () => {
           setActiveTab={setActiveTab}
         />
       )}
+      {firebaseUser && !firebaseUser.emailVerified && <VerifyEmailBanner />}
+      {authModal && (
+        <Modal 
+          isOpen={!!authModal} 
+          onClose={() => setAuthModal(null)} 
+          title={authModal === 'login' ? 'Welcome Back, Stylist' : 'Create Your Account'}
+        >
+          {authModal === 'login' ? (
+            <Login 
+              onToggle={() => setAuthModal('register')} 
+              onSuccess={() => setAuthModal(null)} 
+            />
+          ) : (
+            <Register 
+              onToggle={() => setAuthModal('login')} 
+              onSuccess={() => setAuthModal(null)} 
+            />
+          )}
+        </Modal>
+      )}
       {colorPlan && isAssistantOpen && (
           <AssistantModal
             isOpen={isAssistantOpen}
@@ -176,7 +203,12 @@ const App: React.FC = () => {
             hairAnalysis={hairAnalysis}
           />
       )}
-      <Header theme={theme} toggleTheme={toggleTheme} />
+      <Header 
+        theme={theme} 
+        toggleTheme={toggleTheme}
+        onLoginClick={() => setAuthModal('login')}
+        onRegisterClick={() => setAuthModal('register')}
+      />
       <main className="container mx-auto p-4 md:p-8">
         <div className="bg-[--color-surface] shadow-2xl rounded-2xl border border-[--color-border]">
           <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />

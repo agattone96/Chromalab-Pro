@@ -9,9 +9,10 @@ import { KeyIcon } from '../icons/KeyIcon';
 
 interface ProfileTabProps {
   setActiveTab: (tab: Tab) => void;
+  setAuthModal: (modal: 'login' | 'register' | null) => void;
 }
 
-const ProfileTab: React.FC<ProfileTabProps> = ({ setActiveTab }) => {
+const ProfileTab: React.FC<ProfileTabProps> = ({ setActiveTab, setAuthModal }) => {
   const { currentUser } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -64,7 +65,26 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ setActiveTab }) => {
   if (!currentUser) {
     return (
       <Card>
-        <p>Loading profile...</p>
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2">Join Chromalab Pro</h2>
+          <p className="text-[--color-text-secondary] mb-6">
+            Sign in or create an account to verify your license and unlock professional tools.
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setAuthModal('login')}
+              className="bg-black/20 border border-[--color-border] text-white font-bold py-2 px-6 rounded-md hover:bg-[--color-border] transition-colors"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setAuthModal('register')}
+              className="bg-gradient-to-r from-[--color-accent-violet] to-[--color-accent-pink] text-white font-bold py-2 px-6 rounded-md"
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
       </Card>
     );
   }
